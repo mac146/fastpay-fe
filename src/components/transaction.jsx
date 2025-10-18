@@ -1,23 +1,19 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
 
-
-function Signup() {
-  const [formData, setFormData] = useState({ fullname: "", email: "", password: "" });
+function Transaction() {
+  const [formData, setFormData] = useState({ recipient: "", amount: "" });
   const [message, setMessage] = useState("");
-  const navigate = useNavigate();
-
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSubmit = async (e) => {
+  const handleSend = async (e) => {
     e.preventDefault();
-    setMessage("Creating wallet...");
+    setMessage("Processing transaction...");
 
     try {
-      const res = await fetch("", {
+      const res = await fetch("http://localhost:8000/send-money", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -26,11 +22,10 @@ function Signup() {
       const data = await res.json();
 
       if (res.ok) {
-        setMessage(`Wallet created successfully! ID: ${data.wallet_id || "N/A"}`);
-        setFormData({ fullname: "", email: "", password: "" });
-        setTimeout(() => navigate("/wallet"), 1500);
+        setMessage(`Sent ₹${formData.amount} to wallet ${formData.recipient}`);
+        setFormData({ recipient: "", amount: "" });
       } else {
-        setMessage(data.detail || "Something went wrong");
+        setMessage(data.detail || "Transaction failed");
       }
     } catch (err) {
       setMessage("Network error: " + err.message);
@@ -39,74 +34,44 @@ function Signup() {
 
   return (
     <div
-      className="background"
       style={{
-        height: "100vh",
-        background: "linear-gradient(45deg, #ffffff, #a8e0ff)",
+        minHeight: "100vh",
         display: "flex",
         flexDirection: "column",
         justifyContent: "center",
         alignItems: "center",
-        gap: "20px", // spacing between elements
+        background: "linear-gradient(45deg, #ffffff, #a8e0ff)",
       }}
     >
-      {/* FastPay */}
-      <h1
-        style={{
-          fontSize: "3rem",
-          color: "#040e16ff",
-          fontWeight: "bold",
-        }}
-      >
-        FastPay
+      <h1 style={{ fontSize: "2.5rem", marginBottom: "20px", color: "#4db6ff" }}>
+        Send Money
       </h1>
 
-      {/* Welcome */}
-      <h2
-        style={{
-          fontSize: "2rem",
-          color: "#333",
-        }}
-      >
-        Welcome
-      </h2>
-
-      {/* Signup container */}
       <div
         style={{
           padding: "24px",
           borderRadius: "10px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.1)",
-          width: "320px",
+          width: "350px",
           textAlign: "center",
           backgroundColor: "#fff",
         }}
       >
-        <h2>SIGNUP</h2>
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSend}>
           <input
             type="text"
-            name="fullname"
-            placeholder="Full Name"
-            value={formData.fullname}
+            name="recipient"
+            placeholder="Recipient Wallet ID"
+            value={formData.recipient}
             onChange={handleChange}
             required
             style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
           />
           <input
-            type="email"
-            name="email"
-            placeholder="Email"
-            value={formData.email}
-            onChange={handleChange}
-            required
-            style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
-          />
-          <input
-            type="password"
-            name="password"
-            placeholder="PASSWORD"
-            value={formData.password}
+            type="number"
+            name="amount"
+            placeholder="Amount"
+            value={formData.amount}
             onChange={handleChange}
             required
             style={{ width: "100%", padding: "8px", marginBottom: "10px" }}
@@ -123,7 +88,7 @@ function Signup() {
               cursor: "pointer",
             }}
           >
-            Create Wallet
+            Send Money
           </button>
         </form>
         <p style={{ marginTop: "10px", color: "#333" }}>{message}</p>
@@ -132,4 +97,4 @@ function Signup() {
   );
 }
 
-export default Signup;
+export default Transaction;
