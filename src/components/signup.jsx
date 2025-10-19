@@ -17,7 +17,7 @@ function Signup() {
     setMessage("Creating wallet...");
 
     try {
-      const res = await fetch("", {
+      const res = await fetch("http://127.0.0.1:8000/user/", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
@@ -27,6 +27,9 @@ function Signup() {
 
       if (res.ok) {
         setMessage(`Wallet created successfully! ID: ${data.wallet_id || "N/A"}`);
+         const userId = data.data[0].id; // grab user ID from the array
+         localStorage.setItem("userId", userId);
+         localStorage.setItem("walletId", data.wallet_id);
         setFormData({ fullname: "", email: "", password: "" });
         setTimeout(() => navigate("/wallet"), 1500);
       } else {

@@ -1,36 +1,52 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 
 function Transaction() {
   const [formData, setFormData] = useState({ recipient: "", amount: "" });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate();
 
+  // Handle input changes
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
-  const handleSend = async (e) => {
-    e.preventDefault();
-    setMessage("Processing transaction...");
+  // Handle form submission
+const handleSend = async (e) => {
+  e.preventDefault();
+  setMessage("Processing transaction...");
 
-    try {
-      const res = await fetch("http://localhost:8000/send-money", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
+  const senderId = localStorage.getItem("userId");
+  if (!senderId) {
+    setMessage("User not found. Please signup first.");
+    return;
+  }
 
-      const data = await res.json();
+  try {
+    const res = await fetch("http://127.0.0.1:8000/transaction/", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        from_user: senderId,
+        to_user: formData.recipient,
+        amount: Number(formData.amount),
+        type: "transfer",   // must be 'add-funds' or 'transfer'
+        status: "success"   // must be 'success' or 'failed'
+      }),
+    });
 
-      if (res.ok) {
-        setMessage(`Sent ₹${formData.amount} to wallet ${formData.recipient}`);
-        setFormData({ recipient: "", amount: "" });
-      } else {
-        setMessage(data.detail || "Transaction failed");
-      }
-    } catch (err) {
-      setMessage("Network error: " + err.message);
+    const data = await res.json();
+
+    if (res.ok) {
+      setMessage(`Sent ₹${formData.amount} to ${formData.recipient}`);
+      setFormData({ recipient: "", amount: "" });
+    } else {
+      setMessage(JSON.stringify(data));
     }
-  };
+  } catch (err) {
+    setMessage("Network error: " + err.message);
+  }
+};
 
   return (
     <div
@@ -41,11 +57,10 @@ function Transaction() {
         justifyContent: "center",
         alignItems: "center",
         background: "linear-gradient(45deg, #ffffff, #a8e0ff)",
+        gap: "20px",
       }}
     >
-      <h1 style={{ fontSize: "2.5rem", marginBottom: "20px", color: "#4db6ff" }}>
-        Send Money
-      </h1>
+      <h1 style={{ fontSize: "2.5rem", color: "#4db6ff" }}>Send Money</h1>
 
       <div
         style={{
@@ -93,6 +108,20 @@ function Transaction() {
         </form>
         <p style={{ marginTop: "10px", color: "#333" }}>{message}</p>
       </div>
+
+      <button
+        onClick={() => navigate("/wallet")}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#4db6ff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        Back to Wallet
+      </button>
     </div>
   );
 }

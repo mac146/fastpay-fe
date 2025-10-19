@@ -12,6 +12,7 @@ function App() {
 
   return (
     <>
+    
       <Router>
       <Routes>
         <Route path="/" element={<Signup />} />
@@ -19,6 +20,7 @@ function App() {
         <Route path="/transaction" element={<Transaction />} />
       </Routes>
     </Router>
+    
     </>
   )
 }

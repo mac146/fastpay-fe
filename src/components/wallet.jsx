@@ -1,8 +1,8 @@
-import { useState,useEffect } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 
-function Wallet (){
-    const [walletData, setWalletData] = useState({
+function Wallet() {
+  const [walletData, setWalletData] = useState({
     wallet_id: "",
     balance: 0,
     transactions: [],
@@ -11,15 +11,26 @@ function Wallet (){
   const [error, setError] = useState("");
   const navigate = useNavigate();
 
-  // Fetch wallet data from backend
+  const user_Id = localStorage.getItem("userId"); // Get saved user ID
+
   useEffect(() => {
+    if (!user_Id) {
+      setError("User not found. Please signup first.");
+      setLoading(false);
+      return;
+    }
+
     const fetchWallet = async () => {
       try {
-        const res = await fetch("http://localhost:8000/get-wallet");
+        const res = await fetch(`http://127.0.0.1:8000/wallet/user/${user_Id}`);
         const data = await res.json();
 
         if (res.ok) {
-          setWalletData(data);
+          setWalletData({
+            wallet_id: data.wallet_id || "",
+            balance: data.balance || 0,
+            transactions: data.transactions || [],
+          });
         } else {
           setError(data.detail || "Failed to fetch wallet");
         }
@@ -31,10 +42,12 @@ function Wallet (){
     };
 
     fetchWallet();
-  }, []);
+  }, [user_Id]);
 
   if (loading) return <p>Loading wallet...</p>;
   if (error) return <p style={{ color: "red" }}>{error}</p>;
+
+  const { wallet_id, balance, transactions = [] } = walletData;
 
   return (
     <div
@@ -45,11 +58,11 @@ function Wallet (){
         justifyContent: "center",
         alignItems: "center",
         background: "linear-gradient(45deg, #ffffff, #a8e0ff)",
+        gap: "20px",
       }}
     >
-      <h1 style={{ fontSize: "2.5rem", marginBottom: "10px", color: "#4db6ff" }}>
-        Your Wallet
-      </h1>
+      <h1 style={{ fontSize: "2.5rem", color: "#4db6ff" }}>Your Wallet</h1>
+
       <div
         style={{
           padding: "24px",
@@ -61,16 +74,16 @@ function Wallet (){
         }}
       >
         <p>
-          <strong>Wallet ID:</strong> {walletData.wallet_id}
+          <strong>USER ID:</strong> {user_Id}
         </p>
         <p>
-          <strong>Balance:</strong> ₹{walletData.balance}
+          <strong>Balance:</strong> ₹{balance}
         </p>
 
         <h3 style={{ marginTop: "20px" }}>Transactions</h3>
         <ul style={{ textAlign: "left", maxHeight: "150px", overflowY: "auto" }}>
-          {walletData.transactions.length > 0 ? (
-            walletData.transactions.map((txn, idx) => (
+          {transactions.length > 0 ? (
+            transactions.map((txn, idx) => (
               <li key={idx}>
                 {txn.type} ₹{txn.amount} — {new Date(txn.date).toLocaleString()}
               </li>
@@ -80,8 +93,22 @@ function Wallet (){
           )}
         </ul>
       </div>
-      <button onClick={() => navigate("/transaction")}>Go to Transactions</button>
+
+      <button
+        onClick={() => navigate("/transaction")}
+        style={{
+          padding: "10px 20px",
+          backgroundColor: "#4db6ff",
+          color: "#fff",
+          border: "none",
+          borderRadius: "6px",
+          cursor: "pointer",
+        }}
+      >
+        Go to Transactions
+      </button>
     </div>
   );
 }
+
 export default Wallet;
